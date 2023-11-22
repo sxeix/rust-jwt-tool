@@ -21,6 +21,7 @@ struct MyApp {
     content: String,
     jwt: String,
     current_content: String,
+    error_message: String,
 }
 
 impl Default for MyApp {
@@ -31,6 +32,7 @@ impl Default for MyApp {
             content: String::from(""),
             jwt: String::from(""),
             current_content: String::from(""),
+            error_message: String::from(""),
         }
     }
 }
@@ -66,6 +68,10 @@ impl eframe::App for MyApp {
             ui.label("Edit payload content");
             ui.text_edit_multiline(&mut self.content);
 
+            if !self.error_message.is_empty() {
+                ui.label(format!("Error: {}", self.error_message));
+            }
+
             ui.label("Enter secret");
             ui.text_edit_singleline(&mut self.secret);
 
@@ -74,6 +80,14 @@ impl eframe::App for MyApp {
 
             if ui.button("Generate").clicked() {
                 self.jwt = jwt::generate_jwt(&self.string_option, &self.content, &self.secret);
+                if self.jwt.is_empty() {
+                    self.error_message.replace_range(
+                        ..,
+                        "Something went wrong with creating the JWT - check json is valid",
+                    );
+                } else {
+                    self.error_message.clear();
+                }
             }
 
             ui.label(format!("JWT: {}", self.jwt));
