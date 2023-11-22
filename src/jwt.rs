@@ -12,8 +12,15 @@ struct Project2 {
 }
 
 pub fn generate_jwt(project_type: &String, content: &String, secret: &String) -> String {
-    let encoding_key: EncodingKey =
-        EncodingKey::from_base64_secret(secret).expect("base64 of secret went wrong");
+    let encoding_key_result = EncodingKey::from_base64_secret(secret);
+
+    let encoding_key = match encoding_key_result {
+        Ok(result) => result,
+        Err(error) => {
+            println!("Problem parsing json to struct: {:?}", error);
+            return String::from("");
+        }
+    };
 
     match project_type.as_str() {
         "project1" => {

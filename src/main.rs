@@ -58,8 +58,8 @@ impl eframe::App for MyApp {
 
             if self.current_content != self.string_option {
                 match self.string_option.as_str() {
-                    "project1" => self.content.replace_range(.., "{\"test\":\"test\"}"),
-                    "project2" => self.content.replace_range(.., "{\"another\":\"test\"}"),
+                    "project1" => self.content.replace_range(.., "{\n\t\"test\":\"test\"\n}"),
+                    "project2" => self.content.replace_range(.., "{\n\t\"another\":\"test\"\n}"),
                     _ => self.content.clear(),
                 }
                 self.current_content.replace_range(.., &self.string_option)
@@ -83,7 +83,7 @@ impl eframe::App for MyApp {
                 if self.jwt.is_empty() {
                     self.error_message.replace_range(
                         ..,
-                        "Something went wrong with creating the JWT - check json is valid",
+                        "Something went wrong with creating the JWT - check json is valid and key is in base64",
                     );
                 } else {
                     self.error_message.clear();
