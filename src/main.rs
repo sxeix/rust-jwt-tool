@@ -7,7 +7,10 @@ mod jwt;
 const STRING_OPTIONS: [&str; 2] = ["project1", "project2"];
 
 fn main() {
-    let options = eframe::NativeOptions::default();
+    let options = eframe::NativeOptions {
+        initial_window_size: Some(egui::vec2(800.0, 500.0)),
+        ..Default::default()
+    };
     let _ = eframe::run_native(
         "jwt-generator",
         options,
@@ -75,7 +78,7 @@ impl eframe::App for MyApp {
             ui.label("Enter secret");
             ui.text_edit_singleline(&mut self.secret);
 
-            ui.label(format!("Payload is currently: {}", self.content));
+            ui.label(format!("Payload is currently:\n{}", self.content));
             ui.label(format!("Secret is currently: {}", self.secret));
 
             if ui.button("Generate").clicked() {
