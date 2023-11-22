@@ -12,7 +12,6 @@ struct Project2 {
 }
 
 pub fn generate_jwt(project_type: &String, content: &String, secret: &String) -> String {
-
     let encoding_key: EncodingKey =
         EncodingKey::from_base64_secret(secret).expect("base64 of secret went wrong");
 
@@ -24,10 +23,16 @@ pub fn generate_jwt(project_type: &String, content: &String, secret: &String) ->
                 Err(error) => {
                     println!("Problem parsing json to struct: {:?}", error);
                     return String::from("");
-                },
+                }
             };
-            return encode(&Header::default(), &my_claims, &encoding_key)
-                .expect("token generation went wrong ");
+            let result = encode(&Header::default(), &my_claims, &encoding_key);
+            return match result {
+                Ok(jwt) => jwt,
+                Err(error) => {
+                    println!("Problem parsing json to struct: {:?}", error);
+                    return String::from("");
+                }
+            };
         }
         "project2" => {
             let my_claims_result = serde_json::from_str::<Project2>(content);
@@ -36,10 +41,16 @@ pub fn generate_jwt(project_type: &String, content: &String, secret: &String) ->
                 Err(error) => {
                     println!("Problem parsing json to struct: {:?}", error);
                     return String::from("");
-                },
+                }
             };
-            return encode(&Header::default(), &my_claims, &encoding_key)
-                .expect("token generation went wrong ");
+            let result = encode(&Header::default(), &my_claims, &encoding_key);
+            return match result {
+                Ok(jwt) => jwt,
+                Err(error) => {
+                    println!("Problem parsing json to struct: {:?}", error);
+                    return String::from("");
+                }
+            };
         }
         _ => panic!("Invalid project"),
     }
