@@ -16,8 +16,10 @@ fn main() {
     let _ = eframe::run_native(
         "jwt-generator",
         options,
-        Box::new(|_cc| Box::new(JwtGenerator::default())),
-    );
+        Box::new(|cc| {
+            cc.egui_ctx.set_visuals(egui::style::Visuals::dark());
+            Box::new(JwtGenerator::default())
+        }));
 }
 
 fn format_json_str(json_str: &str) -> String {
