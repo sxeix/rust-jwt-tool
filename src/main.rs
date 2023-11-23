@@ -20,6 +20,18 @@ fn main() {
     );
 }
 
+fn format_json_str(json_str: &str) -> String {
+    let json_object_result= serde_json::from_str(json_str);
+    let json_object: serde_json::Value = match json_object_result {
+        Ok(result) => result,
+        Err(error) => {
+            println!("Problem parsing json to struct: {:?}", error);
+            return String::from("");
+        }
+    };
+    return serde_json::to_string_pretty(&json_object).unwrap();
+}
+
 struct JwtGenerator {
     selected_option: Project,
     secret: String,
@@ -65,9 +77,10 @@ impl eframe::App for JwtGenerator {
             });
 
             if self.current_content != self.selected_option {
+                
                 match self.selected_option {
-                    Project::Project1 => self.content.replace_range(.., "{\n\t\"test\":\"test\"\n}"),
-                    Project::Project2 => self.content.replace_range(.., "{\n\t\"another\":\"test\"\n}"),
+                    Project::Project1 => self.content.replace_range(.., &format_json_str("{\"test\":\"test\"}")),
+                    Project::Project2 => self.content.replace_range(.., &format_json_str("{\"another\":\"test\"}")),
                     _ => self.content.clear(),
                 }
                 self.current_content = self.selected_option;
