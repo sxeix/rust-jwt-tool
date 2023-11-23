@@ -1,71 +1,91 @@
-#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use eframe::egui;
+use project_info::Project;
+use strum::IntoEnumIterator;
 
 mod jwt;
-
-const STRING_OPTIONS: [&str; 2] = ["project1", "project2"];
+mod project_info;
 
 fn main() {
     let options = eframe::NativeOptions {
         initial_window_size: Some(egui::vec2(800.0, 500.0)),
         ..Default::default()
     };
+
     let _ = eframe::run_native(
         "jwt-generator",
         options,
-        Box::new(|_cc| Box::new(MyApp::default())),
-    );
+        Box::new(|cc| {
+            cc.egui_ctx.set_visuals(egui::style::Visuals::dark());
+            Box::new(JwtGenerator::default())
+        }));
 }
 
-struct MyApp {
-    string_option: String,
+fn format_json_str(json_str: &str) -> String {
+    let json_object_result= serde_json::from_str(json_str);
+    let json_object: serde_json::Value = match json_object_result {
+        Ok(result) => result,
+        Err(error) => {
+            println!("Problem parsing json to struct: {:?}", error);
+            return String::from("");
+        }
+    };
+    return serde_json::to_string_pretty(&json_object).unwrap();
+}
+
+struct JwtGenerator {
+    selected_option: Project,
     secret: String,
     content: String,
     jwt: String,
-    current_content: String,
+    current_content: Project,
     error_message: String,
 }
 
-impl Default for MyApp {
+impl Default for JwtGenerator {
     fn default() -> Self {
         Self {
-            string_option: String::from("project1"),
+            selected_option: project_info::Project::Project1,
             secret: String::from(""),
             content: String::from(""),
             jwt: String::from(""),
-            current_content: String::from(""),
+            current_content: project_info::Project::InvalidProject,
             error_message: String::from(""),
         }
     }
 }
 
-impl eframe::App for MyApp {
+impl eframe::App for JwtGenerator {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
+
             ui.heading("JWT generator");
 
             ui.label("Please select the app you want a JWT for");
 
             egui::ComboBox::from_label(format!(
                 "Currently selected project: {}",
-                self.string_option
+                self.selected_option
             ))
-            .selected_text(self.string_option.clone())
+            .selected_text(self.selected_option.to_string())
             .show_ui(ui, |ui| {
-                for option in STRING_OPTIONS {
-                    // Selectable values can be anything: enums, strings or integers - as long as they can be compared and have a text repersentation
-                    ui.selectable_value(&mut self.string_option, option.into(), option);
+                for project in Project::iter() {
+                    if project == Project::InvalidProject {
+                        continue;
+                    }
+                    ui.selectable_value(&mut self.selected_option, project, project.to_string());
                 }
             });
 
-            if self.current_content != self.string_option {
-                match self.string_option.as_str() {
-                    "project1" => self.content.replace_range(.., "{\n\t\"test\":\"test\"\n}"),
-                    "project2" => self.content.replace_range(.., "{\n\t\"another\":\"test\"\n}"),
+            if self.current_content != self.selected_option {
+                
+                match self.selected_option {
+                    Project::Project1 => self.content.replace_range(.., &format_json_str("{\"test\":\"test\"}")),
+                    Project::Project2 => self.content.replace_range(.., &format_json_str("{\"another\":\"test\"}")),
                     _ => self.content.clear(),
                 }
-                self.current_content.replace_range(.., &self.string_option)
+                self.current_content = self.selected_option;
             }
 
             ui.label("Edit payload content");
@@ -82,7 +102,7 @@ impl eframe::App for MyApp {
             ui.label(format!("Secret is currently: {}", self.secret));
 
             if ui.button("Generate").clicked() {
-                self.jwt = jwt::generate_jwt(&self.string_option, &self.content, &self.secret);
+                self.jwt = jwt::generate_jwt(&self.selected_option, &self.content, &self.secret);
                 if self.jwt.is_empty() {
                     self.error_message.replace_range(
                         ..,
